@@ -1,73 +1,104 @@
-const request = require('request');
-var CryptoJS = require("crypto-js");
+const request = require('request'),
+      CryptoJS = require("crypto-js"),
+      ACCESS_TOKEN = 'ZtWsDxzfTTkGnnsjp8yC',
+      SECRET_KEY = 'V_-es-3JD82YyiNdzot7',
+      baseUrl = 'https://developer-api.bringg.com/partner_api';
 
-module.exports.createUser = async (params) => {
-    // let params = req.body;
+
+/**
+ * set request credentials and prepare payload
+ * @param params
+ * @returns {*}
+ */
+let paramsProcessore = (params=null) => {
+    if(!params) var params = {};
     params.timestamp = Date.now();
-    params.access_token = 'ZtWsDxzfTTkGnnsjp8yC';
-
-    var query_params = '';
-    for (var key in params) {
-        var value = params[key];
+    params.access_token = ACCESS_TOKEN;
+    params.page = 1;
+    let query_params = '';
+    for (let key in params) {
+        let value = params[key];
         if (query_params.length > 0) {
             query_params += '&';
         }
         query_params += key + '=' + encodeURIComponent(value);
     }
-    params.signature = CryptoJS.HmacSHA1(query_params, "V_-es-3JD82YyiNdzot7").toString();
-    let options = {
-        url: 'https://developer-api.bringg.com/partner_api/customers',
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json'
-        },
-        form: (params)
-    };
-    request(options, (error, response, body) => {
-        if(error) {
-            console.log(error);
-            return error
-            // res.status(404).send(error);
+    params.signature = CryptoJS.HmacSHA1(query_params, SECRET_KEY).toString();
+    return params;
+};
+
+/**
+ * Convert object to query-params string
+ * @param obj
+ * @returns {string}
+ */
+let serialize = function(obj) {
+    let str = [];
+    for (let p in obj)
+        if (obj.hasOwnProperty(p)) {
+            str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
         }
-        console.log(body);
-        return body;
-        // res.send(body);
-    })
-}
+    return str.join("&");
+};
 
-module.exports.createTask = async (params) => {
-
-    if(params && !params.cust)
-
-    // let params = req.body;
-    params.timestamp = Date.now();
-    params.access_token = 'ZtWsDxzfTTkGnnsjp8yC';
-
-    var query_params = '';
-    for (var key in params) {
-        var value = params[key];
-        if (query_params.length > 0) {
-            query_params += '&';
-        }
-        query_params += key + '=' + encodeURIComponent(value);
+let paginationReq = async function (){
+    let page = 1;
+    let res = await getPreviousWeekOrders(page);
+    let all = [res];
+    while(res && JSON.parse(res).length > 0){
+        page++;
+        res=await getPreviousWeekOrders(page);
+        all.push(res)
     }
-    params.signature = CryptoJS.HmacSHA1(query_params, "V_-es-3JD82YyiNdzot7").toString();
-    let options = {
-        url: 'https://developer-api.bringg.com/partner_api/tasks',
-        method: 'POST',
-        headers: {
-            'content-type': 'application/json'
-        },
-        form: (params)
-    };
-    request(options, (error, response, body) => {
-        if(error) {
-            console.log(error);
-            return error
-            // res.status(404).send(error);
-        }
-        console.log(body);
-        return body;
-        // res.send(body);
+    return all
+};
+
+createCustomer = async (params) => {
+    // let params = req.body;
+    return new Promise((res, rej) => {
+        paramsProcessore(params);
+        let options = {
+            url: `${baseUrl}/customers`,
+            method: 'POST',
+            headers: {'content-type': 'application/json'},
+            form: params
+        };
+        request(options, (error, response, body) => error ? rej(error) : res(body))
     })
 };
+
+createTask = async (params) => {
+    if(params && !params.customer_id) {
+        return new Error('customer_id')
+    }
+    return new Promise((res, rej) => {
+        paramsProcessore(params);
+        let options = {
+            url: `${baseUrl}/tasks`,
+            method: 'POST',
+            headers: {'content-type': 'application/json'},
+            form: params
+        };
+        request(options, (error, response, body) => error ? rej(error) : res(body))
+    })
+};
+
+getPreviousWeekOrders = async () => {
+    return new Promise((res, rej) => {
+        let params = paramsProcessore();
+        let options = {
+            url: `${baseUrl}/tasks?${serialize(params)}`,
+            method: 'GET',
+            headers: {
+                'content-type': 'application/json'
+            }
+        };
+        console.log(options);
+        request(options, (error, response, body) => error ? rej(error) : res(body))
+    })
+};
+
+exports.createCustomer = createCustomer;
+exports.createTask = createTask;
+exports.getPreviousWeekOrders = getPreviousWeekOrders;
+exports.paginationReq = paginationReq;
