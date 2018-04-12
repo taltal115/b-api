@@ -53,8 +53,14 @@ let paginationReq = async function (){
     return all
 };
 
+/**
+ * [API] Create new customer
+ * @param params
+ * @returns {Promise<any>}
+ */
 createCustomer = async (params) => {
     // let params = req.body;
+    console.log('Creating customer...');
     return new Promise((res, rej) => {
         paramsProcessore(params);
         let options = {
@@ -67,10 +73,16 @@ createCustomer = async (params) => {
     })
 };
 
+/**
+ * [API] Create task for customer
+ * @param params
+ * @returns {Promise<*>}
+ */
 createTask = async (params) => {
     if(params && !params.customer_id) {
         return new Error('customer_id')
     }
+    console.log('Creating task...');
     return new Promise((res, rej) => {
         paramsProcessore(params);
         let options = {
@@ -79,10 +91,15 @@ createTask = async (params) => {
             headers: {'content-type': 'application/json'},
             form: params
         };
+        console.log(options);
         request(options, (error, response, body) => error ? rej(error) : res(body))
     })
 };
 
+/**
+ * [API] get previous week orders
+ * @returns {Promise<any>}
+ */
 getPreviousWeekOrders = async () => {
     return new Promise((res, rej) => {
         let params = paramsProcessore();
