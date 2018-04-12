@@ -1,56 +1,73 @@
-const request = require('request'),
-      CryptoJS = require("crypto-js"),
-      ACCESS_TOKEN = 'ZtWsDxzfTTkGnnsjp8yC',
-      SECRET_KEY = 'V_-es-3JD82YyiNdzot7',
-      baseUrl = 'https://developer-api.bringg.com/partner_api';
+const request = require('request');
+var CryptoJS = require("crypto-js");
 
+module.exports.createUser = async (params) => {
+    // let params = req.body;
+    params.timestamp = Date.now();
+    params.access_token = 'ZtWsDxzfTTkGnnsjp8yC';
 
-let paramsProcessore = (params) => {
-    let query_params = '';
-    for (let key in params) {
-        let value = params[key];
+    var query_params = '';
+    for (var key in params) {
+        var value = params[key];
         if (query_params.length > 0) {
             query_params += '&';
         }
         query_params += key + '=' + encodeURIComponent(value);
     }
-    params.signature = CryptoJS.HmacSHA1(query_params, SECRET_KEY).toString();
-    return params;
-};
-
-let apiRequest = (url, method, params=null) => {
-    params.timestamp = Date.now();
-    params.access_token = ACCESS_TOKEN;
+    params.signature = CryptoJS.HmacSHA1(query_params, "V_-es-3JD82YyiNdzot7").toString();
     let options = {
-        url: url,
-        method: method,
+        url: 'https://developer-api.bringg.com/partner_api/customers',
+        method: 'POST',
         headers: {
             'content-type': 'application/json'
-        }
+        },
+        form: (params)
     };
-    if(params) options.form = params;
-    return request(options, (error, response, body) => {
+    request(options, (error, response, body) => {
         if(error) {
-            console.error(error);
+            console.log(error);
             return error
+            // res.status(404).send(error);
         }
-        console.log('BODYYY');
         console.log(body);
         return body;
+        // res.send(body);
     })
-};
-
-module.exports.createUser = async (params) => {
-    console.log(`Creating customer`);
-    paramsProcessore(params);
-    return apiRequest(`${baseUrl}/customers`, 'POST', params);
-};
+}
 
 module.exports.createTask = async (params) => {
-    if(params && !params.customer_id) {
-        return new Error('customer_id must be supplied');
+
+    if(params && !params.cust)
+
+    // let params = req.body;
+    params.timestamp = Date.now();
+    params.access_token = 'ZtWsDxzfTTkGnnsjp8yC';
+
+    var query_params = '';
+    for (var key in params) {
+        var value = params[key];
+        if (query_params.length > 0) {
+            query_params += '&';
+        }
+        query_params += key + '=' + encodeURIComponent(value);
     }
-    console.log(`Creating task`);
-    paramsProcessore(params);
-    return apiRequest(`${baseUrl}/tasks`, 'POST', params);
+    params.signature = CryptoJS.HmacSHA1(query_params, "V_-es-3JD82YyiNdzot7").toString();
+    let options = {
+        url: 'https://developer-api.bringg.com/partner_api/tasks',
+        method: 'POST',
+        headers: {
+            'content-type': 'application/json'
+        },
+        form: (params)
+    };
+    request(options, (error, response, body) => {
+        if(error) {
+            console.log(error);
+            return error
+            // res.status(404).send(error);
+        }
+        console.log(body);
+        return body;
+        // res.send(body);
+    })
 };
