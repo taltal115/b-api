@@ -10,18 +10,19 @@ const service = require('../services/mainService'),
         app.route('/orders')
             .get(async (req, res) => {
                 try {
-                    const orders = await service.getPreviousWeekOrders();
-                    let mapped = JSON.parse(orders).map(item => {
+                    const orders = await service.paginationReq();
+                    console.log(orders);
+                    let mapped = orders.map(item => {
                         return {
                             id: item.id,
-                            scheduled_at: item.scheduled_at,
-                            phone: item.phone
+                            created_at: item.created_at,
+                            phone: item.customer.phone
                         }
-                    }).filter(item => {
-                        return moment().week()-1 === moment(item.scheduled_at).week() && moment().year() === moment(item.scheduled_at).year();
+                    })
+                    .filter(item => {
+                        // if current order week equals to last week and its the same year
+                        return moment().week()-1 === moment(item.created_at).week() && moment().year() === moment(item.created_at).year();
                     });
-                    console.log(mapped);
-                    console.log(mapped.length);
                     res.json(mapped);
                 } catch (err) {
                     res.status(404).json(err);

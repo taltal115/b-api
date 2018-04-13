@@ -1,5 +1,6 @@
 const request = require('request'),
       CryptoJS = require("crypto-js"),
+      _ = require("lodash"),
       ACCESS_TOKEN = 'ZtWsDxzfTTkGnnsjp8yC',
       SECRET_KEY = 'V_-es-3JD82YyiNdzot7',
       baseUrl = 'https://developer-api.bringg.com/partner_api';
@@ -10,11 +11,11 @@ const request = require('request'),
  * @param params
  * @returns {*}
  */
-let paramsProcessore = (params=null) => {
+let paramsProcessore = (params=null, page=1) => {
     if(!params) var params = {};
     params.timestamp = Date.now();
     params.access_token = ACCESS_TOKEN;
-    params.page = 1;
+    params.page = page;
     let query_params = '';
     for (let key in params) {
         let value = params[key];
@@ -44,13 +45,13 @@ let serialize = function(obj) {
 let paginationReq = async function (){
     let page = 1;
     let res = await getPreviousWeekOrders(page);
-    let all = [res];
+    let all = [JSON.parse(res)];
     while(res && JSON.parse(res).length > 0){
         page++;
         res=await getPreviousWeekOrders(page);
-        all.push(res)
+        all.push(JSON.parse(res))
     }
-    return all
+    return _.flatten(all)
 };
 
 /**
@@ -69,6 +70,7 @@ createCustomer = async (params) => {
             headers: {'content-type': 'application/json'},
             form: params
         };
+        console.log(options);
         request(options, (error, response, body) => error ? rej(error) : res(body))
     })
 };
@@ -100,9 +102,9 @@ createTask = async (params) => {
  * [API] get previous week orders
  * @returns {Promise<any>}
  */
-getPreviousWeekOrders = async () => {
+getPreviousWeekOrders = async (page) => {
     return new Promise((res, rej) => {
-        let params = paramsProcessore();
+        let params = paramsProcessore(null, page);
         let options = {
             url: `${baseUrl}/tasks?${serialize(params)}`,
             method: 'GET',
