@@ -9,7 +9,7 @@
 
 ## Available API requests
 
-1. Part 1 - Create order per customer
+### Part 1 - Create order per customer
 
     var options = {
       method: 'POST',
@@ -29,7 +29,7 @@
       console.log(body);
     });
 
-2. Part 2 - Create customer and task
+### Part 2 - Create customer and task
 
     var options = {
       method: 'POST',
@@ -49,4 +49,14 @@
       console.log(body);
     });
 
-3. Part 3 - Get customer previous week orders
+### Part 3 - Get customer previous week orders
+
+    var options = {
+    method: 'GET',
+      url: 'http://{host}:3000/orders',
+    };
+
+    request(options, function (error, response, body) {
+      if (error) throw new Error(error);
+      console.log(body);
+    });
